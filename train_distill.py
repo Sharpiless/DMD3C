@@ -9,11 +9,11 @@ from tqdm import tqdm
 import hydra
 import torch.distributed as dist
 from utils import *
-from rpnloss import RandomProposalNormalizationLoss
+from disp_loss import ScaleAndShiftInvariantLoss
 
 def train(run):
     
-    compute_disp_loss = RandomProposalNormalizationLoss()
+    compute_disp_loss = ScaleAndShiftInvariantLoss()
     
     for datas in tqdm(run.trainloader, desc="train", dynamic_ncols=True, leave=False, disable=run.rank):
         if run.epoch >= run.cfg.test_epoch:
@@ -26,8 +26,8 @@ def train(run):
         loss = run.criterion(output, datas[-1])
         
         disp = 1 / (datas[1] + 0.5)
-        # disp_loss = compute_disp_loss(output, disp, torch.ones_like(disp).float())
-        disp_loss = compute_disp_loss(output, disp)
+        disp_loss = compute_disp_loss(output, disp, torch.ones_like(disp).float())
+        # disp_loss = compute_disp_loss(output, disp)
         
         loss += disp_loss
         
