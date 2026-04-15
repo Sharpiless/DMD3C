@@ -26,7 +26,7 @@ def train(run):
         loss = run.criterion(output, datas[-1])
         
         disp = 1 / (datas[1] + 0.5)
-        disp_loss = compute_disp_loss(output, disp, torch.ones_like(disp).float())
+        disp_loss = compute_disp_loss(output[-1], disp, torch.ones_like(disp).float())
         # disp_loss = compute_disp_loss(output, disp)
         
         loss += disp_loss
