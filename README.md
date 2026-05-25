@@ -6,6 +6,9 @@
 
 ---
 
+## Important Update!
+Please refer to our new repo: [https://github.com/Sharpiless/DMD3Cpp](https://github.com/Sharpiless/DMD3Cpp) for detailed training scripts and benchmarks!
+
 ## 🆕 Update Log
 
 - **[2025.04.23]** We have released the **2rd stage training code**! 🎉  
