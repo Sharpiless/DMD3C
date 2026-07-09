@@ -11,6 +11,7 @@ Please refer to our new repo: [https://github.com/Sharpiless/DMD3Cpp](https://gi
 
 ## 🆕 Update Log
 
+- **[2025.07.07]** Now **docker** scripts available!  
 - **[2025.04.23]** We have released the **2rd stage training code**! 🎉  
 - **[2025.04.11]** We have released the **inference code**! 🎉  
 
@@ -38,6 +39,39 @@ DMD³C introduces a novel framework for **fine-grained depth completion** by dis
 
 
 ## 🚀 Getting Started
+
+### (Docker only)
+__Clone repo and set up docker:__
+```sh
+git clone https://github.com/fetty31/DMD3C.git # clone repo
+cd DMD3C/docker/
+chmod +x build run
+./build # build docker image
+./run   # run docker container
+```
+
+_Note that inside the `run` script the directory on your PC with the KITTI data is shared with the docker container via:_
+```sh
+--volume="$HOME/Desktop/kitti_dataset:/home/kitti_dataset" 
+```
+_Change this line (80) inside the [run](docker/run) script in order to match with your KITTI dataset parent folder._
+
+__Once inside docker, set up environment:__
+```sh
+## 🐳 Inside the Docker container
+# build conda env
+cd home/DMD3C/
+conda env create -f environment.yml 
+conda init && source /root/.bashrc
+conda activate bp
+
+# build cuda extension
+cd exts
+export CC=/usr/bin/gcc
+export CXX=/usr/bin/g++
+python setup.py install 
+```
+__From this, jump to steps 3-5__
 
 ### 1. Clone Base Repository
 
@@ -68,7 +102,14 @@ Open `demo.py` and go to **line 338**, where you can modify the input sequence p
 
 ```python
 # demo.py (Line 338)
-sequence = "/path/to/your/kitti/sequence"
+base = "/your/path/to/kitti/sequence"
+```
+
+_(Or if you are using docker):_
+```python
+# demo_docker.py (Line 418)
+global_path = "/your/path/to/kitti/"
+base = global_path + "/sequence"
 ```
 
 Download pre-trained weights:
@@ -81,6 +122,11 @@ mv dmd3c_distillation_depth_anything_v2.pth checkpoints
 Run inference:
 ```bash
 bash demo.sh
+```
+
+_(Or if you are using docker)_
+```bash
+bash demo_docker.sh
 ```
 
 You will get results like this:

@@ -102,7 +102,8 @@ class Trainer(object):
         if 'chpt' in self.cfg:
             self.ddp_log(f'resume CHECKPOINTS')
             save_path = os.path.join('checkpoints', self.cfg.chpt)
-            cp = torch.load(os.path.join(save_path, 'result_ema.pth'), map_location=torch.device('cpu'))
+            # cp = torch.load(os.path.join(save_path, 'result_ema.pth'), map_location=torch.device('cpu'))
+            cp = torch.load(save_path, map_location=torch.device('cpu'))
             model.load_state_dict(cp['net'], strict=True)
             self.best_metric_ema = cp['best_metric_ema']
             print("Epoch:", cp["epoch"])

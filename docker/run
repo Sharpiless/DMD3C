@@ -1,0 +1,87 @@
+#!/bin/bash
+
+DOCKER_NAME="dmd3c-container"
+DOCKER_IMG="dmd3c-img:latest"
+
+if [[ $# -eq 0 ]] ; then
+  echo "WARNING: No arguments provided, container ${DOCKER_NAME} from image ${DOCKER_IMG} will be started"
+elif [[ $# -eq 1 ]] ; then
+  echo "WARNING: Only one argument provided, container $1 from image ${DOCKER_IMG} will be started"
+  DOCKER_NAME=$1
+else
+  DOCKER_NAME=$1
+  DOCKER_IMG=$2
+fi
+
+# Variables required for logging as a user with the same id as the user running this script
+export LOCAL_USER_ID=`id -u $USER`
+export LOCAL_GROUP_ID=`id -g $USER`
+export LOCAL_GROUP_NAME=`id -gn $USER`
+
+PROJECT_ROOT="$(cd "$(dirname "$0")"; cd ..; pwd)"
+
+# Allow customization for docker args
+# For instance, to remove the container when it exits: DOCKER_USER_ARGS='--rm' pal_docker.sh ...
+DOCKER_USER_ARGS="$DOCKER_USER_ARGS --env LOCAL_USER_ID --env LOCAL_GROUP_ID --env LOCAL_GROUP_NAME -it"
+# DOCKER_USER_ARGS="-it"
+
+# Variables for forwarding ssh agent into docker container
+SSH_AUTH_ARGS=""
+if [ ! -z $SSH_AUTH_SOCK ]; then
+    DOCKER_SSH_AUTH_ARGS="-v $SSH_AUTH_SOCK:/run/host_ssh_auth_sock -e SSH_AUTH_SOCK=/run/host_ssh_auth_sock"
+fi
+
+# Settings required for having nvidia GPU acceleration inside the docker
+DOCKER_GPU_ARGS="--env DISPLAY=$DISPLAY --env QT_X11_NO_MITSHM=1 --volume=/tmp/.X11-unix:/tmp/.X11-unix:rw -e NVIDIA_DRIVER_CAPABILITIES=all"
+
+dpkg -l | grep nvidia-container-toolkit &> /dev/null
+HAS_NVIDIA_TOOLKIT=$?
+
+type nvidia-docker &> /dev/null
+HAS_NVIDIA_DOCKER=$?
+
+if [ $HAS_NVIDIA_TOOLKIT -eq 0 ]; then
+  docker_version=`docker version --format '{{.Client.Version}}' | cut -d. -f1`
+  if [ $docker_version -ge 19 ]; then
+	  DOCKER_COMMAND="docker run --gpus all"
+  else
+	  DOCKER_COMMAND="docker run --runtime=nvidia"
+  fi
+elif [ $HAS_NVIDIA_DOCKER -eq 0 ]; then
+  DOCKER_COMMAND="nvidia-docker run"
+else
+  echo "Running without nvidia-docker, if you have an NVidia card you may need it"\
+  "to have GPU acceleration"
+  DOCKER_COMMAND="docker run"
+fi
+
+DOCKER_NETWORK_ARGS="--net host"
+if [[ "$@" == *"--net "* ]]; then
+    DOCKER_NETWORK_ARGS=""
+fi
+
+XAUTH=/tmp/.docker.xauth
+
+xhost +local:root
+
+if docker ps -a | grep -q ${DOCKER_NAME}; then
+  echo "WARNING: A container named ${DOCKER_NAME} was already created; it will be started"
+  docker start -i ${DOCKER_NAME}
+else
+  
+  $DOCKER_COMMAND \
+  $DOCKER_USER_ARGS \
+  $DOCKER_GPU_ARGS \
+  $DOCKER_SSH_AUTH_ARGS \
+  $DOCKER_NETWORK_ARGS \
+  --privileged \
+  --name ${DOCKER_NAME} \
+  --env="XAUTHORITY=$XAUTH" \
+  --volume="$HOME/Desktop/kitti_dataset:/home/kitti_dataset" \
+  ${DOCKER_IMG} 
+
+fi
+
+xhost -local:root
+echo "Goodbye :)"
+

@@ -335,7 +335,6 @@ def main(cfg):
         net = run.net_ema.module.cuda()
         net.eval()
         # 读取左目图像
-        # base = "datas/kitti/raw/2011_09_26/2011_09_26_drive_0002_sync"
         base = "datas/kitti/raw/2011_09_26/2011_09_26_drive_0048_sync"
 
         image_type = 'color'  # 'grayscale' or 'color' image

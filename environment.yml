@@ -269,4 +269,7 @@ dependencies:
   - zipp=3.17.0=pyhd8ed1ab_0
   - zlib=1.2.13=hd590300_5
   - zstd=1.5.2=ha4553b6_0
-
+  - pip:
+      - open3d
+      - imutils
+      - rosbags
